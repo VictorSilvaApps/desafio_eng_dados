@@ -1,21 +1,130 @@
-# Ambiente pronto para o Desafio de Engenharia de Dados
+# Desafio de Engenharia de Dados — Toolkit da Equipe
 
-Toolkit reutilizável com tudo o que as Aulas 1–11 cobriram, já instalado, testado
-e com as armadilhas conhecidas resolvidas por padrão.
+Base comum para o desafio: ingestão, armazenamento (relacional, JSONB e vetorial),
+cálculo de indicadores e dashboards no Superset. Reúne o que foi visto nas Aulas 1–11,
+com as armadilhas de cada uma já resolvidas por padrão.
+
+## Começando
 
 ```bash
-cd ~/Projetos/desafio_eng_dados && source .venv/bin/activate
+git clone <url-deste-repo> && cd desafio_eng_dados && bash setup.sh
 ```
 
-## Estado dos serviços
+O `setup.sh` cria o venv, instala as dependências e **diz o que está faltando** —
+ele não instala serviço nenhum com `sudo`, isso fica a seu critério.
 
-| Serviço | Estado | Acesso |
+Depois, preencha a senha do banco:
+
+```bash
+nano .env      # DB_PASSWORD=
+```
+
+E confirme que funciona:
+
+```bash
+source .venv/bin/activate && python exemplo_pipeline.py
+```
+
+## Serviços necessários
+
+| Serviço | Obrigatório | Como instalar (Ubuntu) |
 |---|---|---|
-| PostgreSQL 18.6 + pgvector 0.8.1 | ativo | `victor@localhost:5432/meu_banco_de_dados` |
-| MongoDB 8.0.29 | ativo | `localhost:27017` |
-| Apache Superset | ativo | <http://localhost:8088> — `admin`/`admin` |
+| PostgreSQL 18 | sim | `sudo apt install postgresql postgresql-contrib` |
+| pgvector | se houver busca semântica | `sudo apt install postgresql-18-pgvector` |
+| MongoDB | só se o desafio pedir NoSQL | repositório oficial — veja abaixo |
+| Apache Superset | para os dashboards | Docker — veja abaixo |
 
-Tudo já está no `.env` (modo 600, fora do Git).
+<details>
+<summary>Instalação do PostgreSQL e criação do usuário</summary>
+
+```bash
+sudo apt install -y postgresql postgresql-contrib postgresql-18-pgvector
+```
+
+```bash
+sudo -u postgres psql -c "CREATE USER seu_usuario;" -c "CREATE DATABASE meu_banco_de_dados OWNER seu_usuario;"
+```
+
+```bash
+sudo -u postgres psql -c '\password seu_usuario'
+```
+
+```bash
+sudo -u postgres psql -d meu_banco_de_dados -c 'CREATE EXTENSION vector;'
+```
+
+Duas coisas que não são óbvias: desde o PostgreSQL 15 o `GRANT ALL ON DATABASE` **não**
+dá permissão de criar tabelas — é preciso ser dono do banco (por isso o `OWNER` acima).
+E a extensão `vector` exige superusuário para ser criada, mesmo sendo usada depois por
+usuário comum.
+</details>
+
+<details>
+<summary>Instalação do MongoDB</summary>
+
+```bash
+curl -fsSL https://pgp.mongodb.com/server-8.0.asc | sudo gpg --yes --dearmor -o /usr/share/keyrings/mongodb-archive-keyring.gpg
+```
+
+```bash
+echo "deb [ arch=amd64 signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+```
+
+```bash
+sudo apt update && sudo apt install -y mongodb-org && sudo systemctl enable --now mongod
+```
+
+Use o codename **`noble`** mesmo no Ubuntu 26.04: o repositório do `resolute` existe e
+responde, mas contém só 1 pacote — o `mongodb-org` não está lá, e o `apt install` falha
+com "package not found" depois de um `apt update` que passou sem erro.
+
+Se o serviço não subir em kernel 6.19+, o pacote define
+`GLIBC_TUNABLES=glibc.pthread.rseq=0` na unit, e é essa variável que dispara a recusa:
+
+```bash
+sudo mkdir -p /etc/systemd/system/mongod.service.d && printf '[Service]\nUnsetEnvironment=GLIBC_TUNABLES\n' | sudo tee /etc/systemd/system/mongod.service.d/kernel.conf && sudo systemctl daemon-reload && sudo systemctl restart mongod
+```
+</details>
+
+<details>
+<summary>Instalação do Superset</summary>
+
+O Superset **não roda em Python 3.13+** — a 6.1.0 suporta 3.10 a 3.12. Por isso Docker:
+
+```bash
+sudo apt install -y docker.io && sudo systemctl enable --now docker && sudo usermod -aG docker $USER
+```
+
+```bash
+sudo docker run -d --name superset --network host -e SUPERSET_SECRET_KEY="$(openssl rand -base64 42)" apache/superset:6.1.0
+```
+
+```bash
+sudo docker exec -it superset superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin
+```
+
+```bash
+sudo docker exec superset superset db upgrade && sudo docker exec superset superset init
+```
+
+Acesse <http://localhost:8088> com `admin`/`admin`. Se usar `--network host`, ajuste
+`SUPERSET_DB_HOST=localhost` no `.env`; com rede bridge, mantenha `172.17.0.1`.
+</details>
+
+## Trabalhando em equipe
+
+Cada pessoa trabalha na sua branch e abre PR para a `main`:
+
+```bash
+git checkout -b feat/minha-parte && git push -u origin feat/minha-parte
+```
+
+Commits semânticos: `feat:` nova funcionalidade, `fix:` correção, `docs:` documentação,
+`chore:` manutenção, `refactor:` reestruturação sem mudança de comportamento.
+
+**Nunca commite o `.env`** — ele está no `.gitignore`, e cada pessoa tem a sua senha
+local. Se precisar adicionar uma variável nova, acrescente ao `.env.example` (sem valor)
+para os outros saberem que ela existe.
 
 ## Pipeline de referência
 
@@ -115,25 +224,24 @@ Cada uma custou tempo em alguma aula. O toolkit lida com elas por padrão:
 3. Troque os nomes de tabela, os KPIs e os gráficos.
 4. Rode. Se aparecer algo novo, o toolkit é só um ponto de partida — edite à vontade.
 
-Consulte também os projetos anteriores, que têm os roteiros completos de cada aula:
-
-```
-~/Projetos/eng_dados_aula01/   PostgreSQL, usuário, acesso externo
-~/Projetos/eng_dados_aula02/   ingestão CSV/JSON com psycopg2
-~/Projetos/eng_dados_aula03/   JSONB e MongoDB
-~/Projetos/eng_dados_aula04/   pgvector e busca vetorial
-~/Projetos/eng_dados_aula08/   pipeline de recomendação
-~/Projetos/eng_dados_superset/ gráficos, KPIs e dashboards
-~/Projetos/eng_dados_extra_clip/ busca multimodal com CLIP
-```
-
 ## Verificação rápida do ambiente
 
 ```bash
 python -c "
 from toolkit.db import consultar
+print('postgres:', consultar('SELECT version()')[0]['version'][:40])
+"
+```
+
+```bash
+python -c "
 from toolkit.superset import Superset
-print('postgres:', consultar('SELECT version()')[0]['version'][:30])
 print('superset:', 'ok' if Superset().token else 'falhou')
 "
 ```
+
+## Origem
+
+Construído ao longo das Aulas 1 a 11 de Engenharia de Dados do FIC DEV IA. Os
+roteiros completos de cada aula ficam nos projetos individuais; aqui está só o que
+é reutilizável no desafio.
