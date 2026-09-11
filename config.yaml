@@ -1,0 +1,47 @@
+# Parâmetros do pipeline (RF01).
+#
+# Segredos NÃO ficam aqui. Host, usuário e senha dos bancos vêm do .env,
+# que está no .gitignore. Este arquivo é versionado e pode ser lido por
+# qualquer pessoa da equipe.
+
+fontes:
+  catalogo: dados/brutos/catalogo.csv
+  interacoes: dados/brutos/interacoes.json
+  comentarios: dados/brutos/comentarios.json
+
+saida:
+  processados: dados/processados
+  artefatos: saida
+
+banco:
+  # Schema próprio dentro do banco das aulas. Mantém as tabelas do desafio
+  # separadas das 13 tabelas dos exercícios e permite recriar tudo do zero
+  # sem precisar de permissão para criar banco (o usuário não tem).
+  schema: desafio
+
+mongo:
+  colecao: comentarios
+
+vetorial:
+  modelo: paraphrase-multilingual-MiniLM-L12-v2
+  dimensoes: 384
+  limite_busca: 5
+  # As 3 consultas que o RF09 exige demonstrar.
+  consultas_demonstracao:
+    - introdução à inteligência artificial para iniciantes
+    - segurança da informação e proteção de dados pessoais
+    - como construir dashboards e visualizar indicadores
+
+recomendacao:
+  # Quantas recomendações guardar por usuário.
+  top_n: 10
+  # Faixas do RF10. O enunciado escreve "Estável (40 > Pontuação < 70)",
+  # faixa impossível de satisfazer; adotamos 40 < P < 70 (decisão G3).
+  limiar_positivo: 70
+  limiar_negativo: 40
+  # Nota a partir da qual a avaliação conta como sinal positivo (Icur).
+  avaliacao_positiva_minima: 4
+
+dashboard:
+  titulo: Desafio 1 — Conteúdos Educacionais
+  nome_banco_superset: PostgreSQL — desafio
