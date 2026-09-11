@@ -1,0 +1,6 @@
+# Os arquivos de origem do desafio precisam ficar byte a byte idênticos aos
+# baixados do Drive: o RF04 exige preservar os originais, e o levantamento se
+# apoia neles para ser rastreável. Sem isto, `core.autocrlf=input` troca o
+# CRLF do catalogo.csv por LF e o arquivo versionado deixa de bater com a fonte.
+documentacao/fontes/** -text
+dados/brutos/**       -text
