@@ -209,7 +209,12 @@ def gravar(destino: Path, nome: str, registros: list[dict]) -> Path:
     else:
         caminho = destino / f'{nome}.csv'
         with open(caminho, 'w', encoding='utf-8', newline='') as f:
-            escritor = csv.DictWriter(f, fieldnames=list(registros[0]))
+            # `lineterminator='\n'`: o csv escreve CRLF por padrão (RFC 4180),
+            # e com `core.autocrlf=input` o git grava LF no blob. O arquivo
+            # versionado passaria a divergir do gerado — aparecendo como
+            # sempre modificado em quem tem outra configuração de autocrlf.
+            escritor = csv.DictWriter(f, fieldnames=list(registros[0]),
+                                      lineterminator='\n')
             escritor.writeheader()
             escritor.writerows({k: _serializavel(v) for k, v in r.items()}
                                for r in registros)
