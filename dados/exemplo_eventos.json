@@ -1,0 +1,6 @@
+[
+  {"evento_id":"E001","venda_id":1,"tipo":"checkout","canal":"web","detalhes":{"cupom":"PROMO10","tentativas":1}},
+  {"evento_id":"E002","venda_id":2,"tipo":"checkout","canal":"app","detalhes":{"cupom":null,"tentativas":2}},
+  {"evento_id":"E003","venda_id":4,"tipo":"cancelamento","canal":"web","detalhes":{"motivo":"arrependimento"}},
+  {"evento_id":"E004","venda_id":7,"tipo":"pendencia","canal":"app","detalhes":{"motivo":"pagamento nao confirmado"}}
+]

@@ -1,0 +1,11 @@
+id,data_venda,produto,categoria,regiao,valor,status
+1,2024-01-05,Notebook Pro,Informática,Sudeste,4500.00,aprovada
+2,2024-01-08,Mouse sem fio,Acessórios,Sul,129.90,aprovada
+3,2024-01-12,Monitor 27 polegadas,Informática,Nordeste,1890.00,aprovada
+4,2024-01-15,"Cadeira ergonômica, com apoio lombar",Mobiliário,Sudeste,1250.00,cancelada
+5,2024-01-19,Teclado mecânico,Acessórios,Centro-Oeste,349.90,aprovada
+6,2024-02-02,Impressora laser,Informática,Sul,2100.00,aprovada
+7,2024-02-07,Headset USB,Acessórios,Norte,219.99,pendente
+8,2024-02-11,Mesa regulável,Mobiliário,Sudeste,1780.00,aprovada
+9,2024-02-16,Webcam Full HD,Acessórios,Nordeste,389.00,cancelada
+10,2024-02-22,Notebook Básico,Informática,Sul,2890.00,aprovada
