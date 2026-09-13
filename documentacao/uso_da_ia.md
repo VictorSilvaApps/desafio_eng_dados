@@ -9,7 +9,7 @@ tem a correção ao lado.
 
 ---
 
-## 1. Ferramenta utilizada
+## 1. Ferramentas utilizadas
 
 **Claude (Opus 5), via Claude Code**, em duas sessões no dia 11/09/2026:
 
@@ -20,6 +20,12 @@ tem a correção ao lado.
 
 O modelo tinha acesso ao terminal, ao repositório e aos bancos. Nenhuma resposta foi
 aceita sem execução: cada etapa do pipeline foi rodada e conferida contra o dado real.
+
+**ChatGPT (GPT-5.6 Sol)** foi utilizado em 13/09/2026 para uma revisão final da
+entrega da equipe. A revisão preservou a implementação existente e concentrou-se em
+reprodutibilidade, execução no Windows, persistência das recomendações, documentação
+e validação ponta a ponta. As alterações sugeridas também foram testadas antes de
+serem incorporadas.
 
 ## 2. Exemplos de solicitações
 
@@ -157,6 +163,22 @@ que o arquivo baixado do Drive — um `\r` por linha. Os arquivos deixaram de se
 `dados/brutos/**`, e `git add --renormalize`. Os três datasets voltaram a bater hash a
 hash com o disco.
 
+### 4.9 — Recomendações acumulavam a cada reexecução
+
+A persistência usava `gerado_em` como parte da chave de conflito. Como cada execução
+gera um novo horário, executar o mesmo pipeline novamente criava outro lote completo
+de recomendações. Com a mesma entrada, duas execuções poderiam deixar 3000 registros
+onde o resultado corrente esperado era de 1500.
+
+Não era uma falha de execução: o próprio README documentava esse comportamento como
+histórico por lote. Na revisão final, ele foi tratado como uma inadequação de
+reprodutibilidade, porque o restante da carga é idempotente e a entrega deve poder ser
+executada novamente sem acumular estado anterior.
+
+**Correção:** `motor.persistir()` passou a remover o lote anterior e inserir o novo
+dentro da mesma transação. A correção foi verificada executando a recomendação duas
+vezes; após ambas, `COUNT(*) = 1500` e `COUNT(DISTINCT gerado_em) = 1`.
+
 ---
 
 ## 5. O que a equipe alterou nas respostas
@@ -173,12 +195,13 @@ hash com o disco.
 
 ## 6. Conclusão honesta
 
-A IA acelerou muito o trabalho — o pipeline inteiro saiu em uma sessão — mas **errou em
-oito pontos verificáveis**, e cinco deles só apareceram porque o código foi executado e
-os números questionados. Dois dos erros (4.1 e 4.2) eram de medição: o programa rodava
-sem reclamar e reportava um número errado, que é a falha mais perigosa num pipeline de
-dados, porque não se anuncia.
+O uso de IA acelerou muito o trabalho, desde a implementação inicial até a revisão
+final, mas **nove inadequações verificáveis** foram identificadas durante a validação.
+Várias delas só apareceram quando o código foi executado, os números foram questionados
+ou o estado real dos bancos e do repositório foi conferido. Dois dos erros (4.1 e 4.2)
+eram de medição: o programa rodava sem reclamar e reportava um número errado, que é a
+falha mais perigosa num pipeline de dados, porque não se anuncia.
 
-A lição prática para a apresentação: **rodar não é verificar**. Nenhum dos oito erros
-teria sido pego lendo o código; todos foram pegos comparando a saída com o que o dado
-realmente é.
+A lição prática para a apresentação é: **rodar não é verificar**. As respostas da IA
+foram confrontadas com os dados reais, testes, bancos, logs e comportamento do pipeline
+antes de serem aceitas pela equipe.

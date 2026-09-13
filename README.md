@@ -108,9 +108,9 @@ registrada porque **vai ser perguntada na apresentação**.
   "avaliação média" como KPI de qualidade — ver [`documentacao/kpis.md`](documentacao/kpis.md).
 - **Cold start**: 135 conteúdos não têm interação nem comentário. A escolha do `Ivis`
   vetorial mitiga, porque a similaridade textual existe para os 1000.
-- **As recomendações acumulam por lote.** Cada execução grava um `gerado_em` novo, de
-  propósito, para guardar o histórico. Para ver só a última:
-  `SELECT * FROM desafio.vw_recomendacoes WHERE gerado_em = (SELECT MAX(gerado_em) FROM desafio.recomendacao)`.
+- **Persistência de recomendações idempotente.** Antes de gravar o novo lote, a etapa remove
+  o lote anterior dentro da mesma transação. Assim, reexecutar o pipeline não acumula
+  recomendações antigas; o banco sempre reflete o resultado da execução mais recente.
 
 ## Requisitos atendidos
 

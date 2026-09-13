@@ -265,8 +265,7 @@ def calcular(estado: dict, parametros: dict, registro: Registro) -> list[dict]:
 def persistir(tabela: str, recomendacoes: list[dict], registro: Registro,
               resumo) -> int:
     """Grava as recomendações (RF11), com data/hora única para o lote."""
-    if not recomendacoes:
-        return 0
+
 
     from contextlib import closing
 
@@ -279,16 +278,20 @@ def persistir(tabela: str, recomendacoes: list[dict], registro: Registro,
 
     try:
         with closing(conectar()) as conn, conn, conn.cursor() as cur:
-            execute_values(cur, f"""
-                INSERT INTO {tabela}
-                    (usuario_id, conteudo_id, pontuacao, posicao,
-                     classificacao, gerado_em)
-                VALUES %s
-                ON CONFLICT (usuario_id, conteudo_id, gerado_em) DO UPDATE
-                   SET pontuacao = EXCLUDED.pontuacao,
-                       posicao = EXCLUDED.posicao,
-                       classificacao = EXCLUDED.classificacao
-            """, linhas, page_size=500)
+            # Mantém apenas o lote atual de recomendações.
+            # Se o pipeline for executado novamente, não acumula duplicados.
+            cur.execute(f'DELETE FROM {tabela}')
+            if linhas:
+                execute_values(cur, f"""
+                    INSERT INTO {tabela}
+                        (usuario_id, conteudo_id, pontuacao, posicao,
+                         classificacao, gerado_em)
+                    VALUES %s
+                    ON CONFLICT (usuario_id, conteudo_id, gerado_em) DO UPDATE
+                       SET pontuacao = EXCLUDED.pontuacao,
+                           posicao = EXCLUDED.posicao,
+                           classificacao = EXCLUDED.classificacao
+                """, linhas, page_size=500)
     except Exception as erro:
         registro.falha('persistencia', tabela, erro)
         raise
