@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: desafio_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: seu_usuario
+      POSTGRES_PASSWORD: sua_senha
+      POSTGRES_DB: meu_banco_de_dados
+    ports:
+      - "5432:5432"
+    networks:
+      - desafio_net
+
+  mongo:
+    image: mongo:8.0
+    container_name: desafio_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - desafio_net
+
+  superset:
+    image: apache/superset:6.1.0
+    container_name: desafio_superset
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: "desafio_eng_dados_superset_secret_key_2026_segura"
+    networks:
+      - desafio_net
+    depends_on:
+      - postgres
+
+networks:
+  desafio_net:
+    driver: bridge

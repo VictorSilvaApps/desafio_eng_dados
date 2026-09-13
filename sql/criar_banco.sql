@@ -15,9 +15,8 @@
 CREATE SCHEMA IF NOT EXISTS desafio;
 SET search_path TO desafio, public;
 
--- A extensão vive no banco, não no schema. Na primeira vez exige
--- superusuário:  sudo -u postgres psql -d <banco> -c 'CREATE EXTENSION vector;'
-CREATE EXTENSION IF NOT EXISTS vector;
+-- A extensão vive no banco, não no schema.
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 
 
 -- ── categoria ────────────────────────────────────────────────

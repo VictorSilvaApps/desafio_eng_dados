@@ -13,6 +13,9 @@ já não é visível.
 import argparse
 import sys
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 from .carga import mongo, postgres
 from .config import Config
 from .dashboard import montar as montar_dashboard
